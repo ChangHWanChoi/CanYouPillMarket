@@ -25,7 +25,7 @@ public class CartController {
 	@Autowired
 	CartService cartService;
 	
-	@RequestMapping(value="/cart/cartInsert.do", method = RequestMethod.GET)
+	@RequestMapping("/cart/cartInsert.do")
 	public String cartInsert(@ModelAttribute Cart cart, HttpSession session, Model model) {
 		String userId = ((Member)session.getAttribute("member")).getUserId();
 		cart.setCartuserid(userId);
@@ -107,31 +107,28 @@ public class CartController {
 			List<Cart> list = cartService.listCart(userId);	//장바구니 정보
 			
 			if(list.size() > 0) {
+					
+				int sumPrice = cartService.sumPrice(userId);
+				
+				int fee = sumPrice >= 30000 ? 0 : 2500;
+				
+				// System.out.println("장바구니 정보 : " + list);
+				// System.out.println("총 가격 : " + sumPrice);
+				// System.out.println("배송비 : " + fee);
+				// 장바구니 전체 금액에 따라 배송비 구분
+				// 3만원 이상 무료배송 , 미만 배송비 2500원
+				
+				map.put("list", list);				// 장바구니 정보를 map에 저장
+				map.put("count", list.size());		// 장바구니 안 상품의 유무
+				map.put("sumPrice", sumPrice);		// 장바구니 전체 금액
+				map.put("fee", fee);				// 배송비
+				map.put("allSum", sumPrice+fee);	// 전체 주문 금액
+				mav.setViewName("cart/cartList"); 	// view(jsp)의 이름 저장
+				mav.addObject("map", map);			// map의 변수 저장
+				
+				return mav;
 			
-			
-			int sumPrice = cartService.sumPrice(userId);
-			
-			
-			
-			int fee = sumPrice >= 30000 ? 0 : 2500;
-			
-//			System.out.println("장바구니 정보 : " + list);
-			System.out.println("총 가격 : " + sumPrice);
-			System.out.println("배송비 : " + fee);
-			// 장바구니 전체 금액에 따라 배송비 구분
-			// 3만원 이상 무료배송 , 미만 배송비 2500원
-			
-			map.put("list", list);				// 장바구니 정보를 map에 저장
-			map.put("count", list.size());		// 장바구니 안 상품의 유무
-			map.put("sumPrice", sumPrice);		// 장바구니 전체 금액
-			map.put("fee", fee);				// 배송비
-			map.put("allSum", sumPrice+fee);	// 전체 주문 금액
-			mav.setViewName("cart/cartList"); 	// view(jsp)의 이름 저장
-			mav.addObject("map", map);			// map의 변수 저장
-			
-			return mav;
-			
-			}else {
+			} else {
 			
 				mav.setViewName("cart/cartList");
 				
@@ -156,7 +153,7 @@ public class CartController {
 		return "redirect:/cart/cartList.do";
 	}
 	
-	// 안 됨
+	// 장바구니 내 수량 수정 ( 안 됨 -> 수정 필요 )
 	@RequestMapping("/cart/cartUpdate.do")
 	public String cartUpdate(@RequestParam int[] amount, @RequestParam int[] pno, @RequestParam int[] orderprice, HttpSession session) {
 		String userId = ((Member)session.getAttribute("member")).getUserId();
